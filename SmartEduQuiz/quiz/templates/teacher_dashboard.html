@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% block title %}SmartEduQuiz - Teacher Dashboard{% endblock %}
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #7209b7;
+        --primary-dark: #560bad;
+        --accent: #b5179e;
+        --success: #4cc9f0;
+        --danger: #f72585;
+        --warning: #f8961e;
+    }
+    /* Include all CSS from teacher dashboard HTML */
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f7fa; margin: 0; padding: 0; }
+    .dashboard-container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .user-info { display: flex; align-items: center; gap: 1rem; }
+    .user-avatar { width: 50px; height: 50px; border-radius: 50%; background-color: var(--accent); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem; }
+    .tabs { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 2rem; }
+    .tab { padding: 0.75rem 1.5rem; cursor: pointer; position: relative; }
+    .tab.active { color: var(--primary); font-weight: 500; }
+    .tab.active:after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 3px; background-color: var(--primary); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border-left: 4px solid var(--primary); transition: transform 0.3s; }
+    .stat-card:hover { transform: translateY(-5px); }
+    .stat-card h3 { font-size: 2rem; margin: 0.5rem 0; color: var(--primary); }
+    .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    .chart-container { background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
+    .data-table th { background-color: var(--primary); color: white; }
+    .badge { padding: 0.35rem 0.65rem; border-radius: 50px; font-size: 0.8rem; font-weight: 500; }
+    .badge-success { background-color: rgba(40, 167, 69, 0.15); color: #28a745; }
+    .badge-warning { background-color: rgba(255, 193, 7, 0.15); color: #ffc107; }
+    .quiz-upload { border: 2px dashed #ccc; border-radius: 10px; padding: 2rem; text-align: center; margin-bottom: 1.5rem; cursor: pointer; transition: all 0.3s; }
+    .quiz-upload:hover { border-color: var(--primary); background-color: rgba(114, 9, 183, 0.05); }
+    .btn { padding: 0.5rem 1rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s; }
+    .btn-primary { background-color: var(--primary); color: white; }
+    .btn-primary:hover { background-color: var(--primary-dark); }
+    .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+    @media (max-width: 992px) { .content-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) { .dashboard-header { flex-direction: column; align-items: flex-start; } .stats-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 576px) { .stats-grid { grid-template-columns: 1fr; } .dashboard-container { padding: 1rem; } .tabs { overflow-x: auto; white-space: nowrap; padding-bottom: 5px; } }
+</style>
+{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="user-info">
+            <div class="user-avatar">{{ user.profile.get_initials }}</div>
+            <div>
+                <h2>Welcome, {{ user.first_name }}</h2>
+                <p>{{ user.profile.department }}</p>
+            </div>
+        </div>
+        <a href="{% url 'create_quiz' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Create Quiz</a>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active">Class Overview</div>
+        <div class="tab">Student Analytics</div>
+        <div class="tab">Quiz Management</div>
+        <div class="tab">Reports</div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <p>Total Students</p>
+            <h3>{{ stats.total_students }}</h3>
+        </div>
+        <div class="stat-card">
+            <p>Avg. Class Score</p>
+            <h3>{{ stats.avg_class_score }}%</h3>
+        </div>
+        <div class="stat-card">
+            <p>Quizzes Created</p>
+            <h3>{{ stats.quizzes_created }}</h3>
+        </div>
+        <div class="stat-card">
+            <p>Weakest Subject</p>
+            <h3>{{ stats.weakest_subject }}</h3>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div>
+            <div class="chart-container">
+                <h3>Class Performance</h3>
+                <div style="height: 250px; background-color: #f8f9fa; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666;">
+                    <i class="bi bi-pie-chart" style="font-size: 2rem; margin-right: 0.5rem;"></i>
+                    Performance Distribution
+                </div>
+            </div>
+            <div class="chart-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3>Student Progress</h3>
+                    <input type="text" placeholder="Search..." style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Last Quiz</th>
+                            <th>Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for progress in student_progress %}
+                        <tr>
+                            <td>{{ progress.student.first_name }}</td>
+                            <td>{{ progress.quiz_title }} - {{ progress.score }}%</td>
+                            <td>
+                                <div class="progress" style="height: 6px; background-color: #eee;">
+                                    <div class="progress-bar" style="width: {{ progress.score }}%; height: 100%; background-color: var(--{% if progress.score >= 80 %}success{% elif progress.score >= 60 %}warning{% else %}danger{% endif %});"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div>
+            <div class="chart-container">
+                <h3>Create New Quiz</h3>
+                <form method="post" action="{% url 'create_quiz' %}">
+                    {% csrf_token %}
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Quiz Title</label>
+                        <input type="text" name="title" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;" placeholder="E.g., Midterm Algebra Quiz" required>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Subject</label>
+                        <select name="category" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Questions (one per line, format: Question|Option1|Option2|Option3|Option4|CorrectAnswer)</label>
+                        <textarea name="questions" style="width: 100%; height: 200px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;" placeholder="What is 2+2?|2|4|6|8|4"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="bi bi-magic"></i> Generate Quiz
+                    </button>
+                </form>
+            </div>
+            <div class="chart-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3>Recent Quiz Results</h3>
+                    <button class="btn btn-outline">Export</button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Quiz</th>
+                            <th>Avg. Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in recent_quizzes %}
+                        <tr>
+                            <td>{{ result.quiz.title }}</td>
+                            <td>{{ result.avg_score }}%</td>
+                            <td><span class="badge {% if result.avg_score >= 80 %}badge-success{% else %}badge-warning{% endif %}">{% if result.avg_score >= 80 %}Completed{% else %}Needs Review{% endif %}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

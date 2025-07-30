@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}SmartEduQuiz - {{ category.name }} Quizzes{% endblock %}
+{% block extra_css %}
+<style>
+    .quizzes-title { font-size: 22px; margin-bottom: 20px; color: var(--dark); }
+    .quizzes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .quiz-card { background: white; border-radius: 10px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1); padding: 20px; transition: all 0.3s; cursor: pointer; border: 2px solid transparent; }
+    .quiz-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); border-color: var(--accent); }
+    .quiz-name { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
+    .quiz-meta { display: flex; justify-content: space-between; color: #888; font-size: 13px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container">
+    <h2 class="quizzes-title">{{ category.name }} Quizzes</h2>
+    <div class="quizzes-grid">
+        {% for quiz in quizzes %}
+        <div class="quiz-card" onclick="window.location.href='{% url 'start_quiz' quiz.id %}'">
+            <h3 class="quiz-name">{{ quiz.title }}</h3>
+            <div class="quiz-meta">
+                <span>{{ quiz.questions.count }} questions</span>
+                <span>30 min</span>
+            </div>
+        </div>
+        {% empty %}
+        <p>No quizzes available in this category.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

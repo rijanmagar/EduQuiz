@@ -1,0 +1,27 @@
+
+{% extends 'base.html' %}
+{% block title %}Login to SmartEduQuiz{% endblock %}
+{% block content %}
+  <div class="container py-5">
+    <h2 class="text-center mb-5">Login to SmartEduQuiz</h2>
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+              {{ form.as_p }}
+              <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+            <div class="text-center mt-3">
+              <p class="mb-1">Or login with:</p>
+              <button class="btn btn-outline-dark me-2"><i class="fab fa-google"></i></button>
+              <button class="btn btn-outline-dark"><i class="fab fa-microsoft"></i></button>
+            </div>
+            <p class="text-center mt-3">Don't have an account? <a href="{% url 'register' %}">Register</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

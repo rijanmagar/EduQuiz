@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load filters %}
+{% block title %}SmartEduQuiz - {{ quiz.title }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/quiz.css' %}">
+{% endblock %}
+{% block content %}
+<div class="quiz-container">
+    <div class="container">
+        <div class="quiz-header">
+            <h1 class="quiz-title">{{ quiz.title }}</h1>
+            <div class="quiz-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ progress }}%;"></div>
+                </div>
+                <span class="progress-text">{{ current_question_index|add:1 }}/{{ questions|length }}</span>
+            </div>
+        </div>
+        
+        <div class="question-container">
+            <h2 class="question-text">{{ current_question.text }}</h2>
+            <form id="quizForm" method="post" action="{% url 'start_quiz' quiz.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="next">
+                <ul class="options-list">
+                    {% for option in current_question.option1|add:","|add:current_question.option2|add:","|add:current_question.option3|add:","|add:current_question.option4|split:"," %}
+                    <li class="option-item">
+                        <label class="option-label">
+                            <input type="radio" name="answer" value="{{ option }}" class="option-input"
+                                   {% if option == user_answer %}checked{% endif %}>
+                            {{ option }}
+                        </label>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="quiz-footer">
+                    <button type="button" class="bookmark-btn {% if current_question.id in bookmarked_questions %}active{% endif %}"
+                            data-question-id="{{ current_question.id }}" id="bookmarkBtn">☆</button>
+                    <div class="nav-buttons">
+                        <button type="submit" name="action" value="previous" class="btn btn-outline"
+                                {% if current_question_index == 0 %}disabled{% endif %}>Previous</button>
+                        <button type="submit" name="action" value="next" class="btn">
+                            {% if current_question_index == questions|length|add:-1 %}Submit{% else %}Next{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('bookmarkBtn').addEventListener('click', function() {
+        const questionId = this.getAttribute('data-question-id');
+        fetch('{% url 'bookmark_question' %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ question_id: questionId })
+        }).then(response => response.json()).then(data => {
+            if (data.status === 'success') {
+                this.classList.toggle('active');
+            }
+        });
+    });
+</script>
+{% endblock %}

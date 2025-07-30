@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}SmartEduQuiz - Bookmarked Questions{% endblock %}
+{% block extra_css %}
+<style>
+    .bookmarked-container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 10px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1); }
+    .question-card { border-bottom: 1px solid #eee; padding: 1rem 0; }
+    .question-text { font-size: 1.2rem; font-weight: 500; margin-bottom: 0.5rem; }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .correct-answer { color: #28a745; font-weight: 500; }
+    .quiz-info { color: #666; font-size: 0.9rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="bookmarked-container">
+    <h2>Bookmarked Questions</h2>
+    {% if questions %}
+        {% for question in questions %}
+        <div class="question-card">
+            <div class="question-text">{{ question.text }}</div>
+            <div class="quiz-info">From quiz: {{ question.quiz.title }} (Category: {{ question.quiz.category.name }})</div>
+            <div class="options">
+                <div>1. {{ question.option1 }}</div>
+                <div>2. {{ question.option2 }}</div>
+                <div>3. {{ question.option3 }}</div>
+                <div>4. {{ question.option4 }}</div>
+            </div>
+            <div class="correct-answer">Correct Answer: {{ question.correct_answer }}</div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No questions bookmarked.</p>
+    {% endif %}
+    <a href="{% url 'quiz_list' %}" class="btn btn-primary" style="margin-top: 1rem;">Back to Quizzes</a>
+</div>
+{% endblock %}

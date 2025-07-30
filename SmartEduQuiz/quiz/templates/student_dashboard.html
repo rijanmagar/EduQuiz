@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block title %}SmartEduQuiz - Student Dashboard{% endblock %}
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-dark: #3a0ca3;
+        --accent: #4895ef;
+        --success: #4cc9f0;
+        --danger: #f72585;
+        --warning: #f8961e;
+    }
+    /* Include all CSS from student dashboard HTML */
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f7fa; margin: 0; padding: 0; }
+    .dashboard-container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .user-info { display: flex; align-items: center; gap: 1rem; }
+    .user-avatar { width: 50px; height: 50px; border-radius: 50%; background-color: var(--accent); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border-left: 4px solid var(--accent); transition: transform 0.3s; }
+    .stat-card:hover { transform: translateY(-5px); }
+    .stat-card h3 { font-size: 2rem; margin: 0.5rem 0; color: var(--primary); }
+    .content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+    .chart-container { background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; }
+    .performance-table { width: 100%; border-collapse: collapse; }
+    .performance-table th, .performance-table td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
+    .performance-table th { background-color: var(--primary); color: white; }
+    .badge { padding: 0.35rem 0.65rem; border-radius: 50px; font-size: 0.8rem; font-weight: 500; }
+    .badge-success { background-color: rgba(40, 167, 69, 0.15); color: #28a745; }
+    .badge-warning { background-color: rgba(255, 193, 7, 0.15); color: #ffc107; }
+    .focus-area { margin-bottom: 1rem; }
+    .focus-area h4 { margin-bottom: 0.5rem; }
+    .btn { padding: 0.5rem 1rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s; }
+    .btn-primary { background-color: var(--primary); color: white; }
+    .btn-primary:hover { background-color: var(--primary-dark); }
+    @media (max-width: 992px) { .content-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) { .dashboard-header { flex-direction: column; align-items: flex-start; } .stats-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 576px) { .stats-grid { grid-template-columns: 1fr; } .dashboard-container { padding: 1rem; } }
+</style>
+{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="user-info">
+            <div class="user-avatar">{{ user.profile.get_initials }}</div>
+            <div>
+                <h2>Welcome, {{ user.first_name }}</h2>
+                <p>{{ user.profile.class_section }}</p>
+            </div>
+        </div>
+        <a href="{% url 'quiz_list' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New Quiz</a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <p>Quizzes Completed</p>
+            <h3>{{ stats.quizzes_completed }}</h3>
+            <div class="progress" style="height: 6px; background-color: #eee;">
+                <div class="progress-bar" style="width: {{ stats.quiz_progress }}%; height: 100%; background-color: var(--success);></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <p>Average Score</p>
+            <h3>{{ stats.average_score }}%</h3>
+            <div class="progress" style="height: 6px; background-color: #eee;">
+                <div class="progress-bar" style="width: {{ stats.average_score }}%; height: 100%; background-color: var(--primary);"></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <p>Class Rank</p>
+            <h3>#{{ stats.class_rank }}</h3>
+            <div class="progress" style="height: 6px; background-color: #eee;">
+                <div class="progress-bar" style="width: {{ stats.rank_progress }}%; height: 100%; background-color: var(--warning);"></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <p>Weakest Subject</p>
+            <h3>{{ stats.weakest_subject }}</h3>
+            <div class="progress" style="height: 6px; background-color: #eee;">
+                <div class="progress-bar" style="width: {{ stats.weakest_score }}%; height: 100%; background-color: var(--danger);"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div>
+            <div class="chart-container">
+                <h3>Performance Trend</h3>
+                <div style="height: 250px; background-color: #f8f9fa; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666;">
+                    <i class="bi bi-bar-chart-line" style="font-size: 2rem; margin-right: 0.5rem;"></i>
+                    Performance Chart
+                </div>
+            </div>
+            <div class="chart-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3>Recent Quiz Attempts</h3>
+                    <a href="{% url 'quiz_list' %}" class="btn" style="border: 1px solid var(--primary); color: var(--primary);">View All</a>
+                </div>
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Score</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attempt in recent_attempts %}
+                        <tr>
+                            <td>{{ attempt.quiz.category.name }}</td>
+                            <td><span class="badge {% if attempt.score >= 80 %}badge-success{% else %}badge-warning{% endif %}">{{ attempt.score }}%</span></td>
+                            <td>{{ attempt.completed_at|date:"Y-m-d" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3">No recent attempts</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div>
+            <div class="chart-container">
+                <h3>Top Performers</h3>
+                <table class="performance-table" style="margin-top: 1rem;">
+                    <tbody>
+                        {% for performer in top_performers %}
+                        <tr {% if performer.user == user %}style="background-color: #f0f7ff;"{% endif %}>
+                            <td>{{ forloop.counter }}. {{ performer.user.first_name }}</td>
+                            <td><span class="badge" style="background-color: rgba(67, 97, 238, 0.15); color: var(--primary);">{{ performer.score }}%</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="chart-container">
+                <h3>Focus Areas</h3>
+                {% for area in focus_areas %}
+                <div class="focus-area">
+                    <h4>{{ area.subject }} <span style="float: right;">{{ area.score }}%</span></h4>
+                    <div class="progress" style="height: 6px; background-color: #eee;">
+                        <div class="progress-bar" style="width: {{ area.score }}%; height: 100%; background-color: var(--{% if area.score < 50 %}danger{% elif area.score < 80 %}warning{% else %}success{% endif %});"></div>
+                    </div>
+                </div>
+                {% endfor %}
+                <a href="{% url 'quiz_list' %}" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                    <i class="bi bi-book"></i> Practice Now
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.stat-card');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

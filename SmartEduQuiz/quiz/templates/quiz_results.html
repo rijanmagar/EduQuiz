@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load filters %}
+{% block title %}SmartEduQuiz - Quiz Results{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/quiz.css' %}">
+{% endblock %}
+{% block content %}
+<div class="results-container">
+    <div class="container">
+        <div class="results-header">
+            <h1 class="results-title">Quiz Results</h1>
+            <p class="results-subtitle">{{ attempt.quiz.title }}</p>
+        </div>
+        
+        <div class="score-container">
+            <div class="score-display">{{ score_percentage }}%</div>
+            <p class="score-text">You scored {{ attempt.score }} out of {{ attempt.total_questions }}</p>
+        </div>
+        
+        <div class="results-details">
+            <h2>Question Review</h2>
+            <ul class="results-questions">
+                {% for answer in attempt.answers.all %}
+                <li class="result-question">
+                    <h3 class="result-question-text">Q{{ forloop.counter }}: {{ answer.question.text }}</h3>
+                    <ul class="result-options">
+                        {% for option in answer.question.option1|add:","|add:answer.question.option2|add:","|add:answer.question.option3|add:","|add:answer.question.option4|split:"," %}
+                        <li class="result-option {% if option == answer.question.correct_answer %}correct{% endif %} {% if option == answer.selected_answer and option != answer.question.correct_answer %}incorrect{% endif %} {% if option == answer.selected_answer %}selected{% endif %}">
+                            <span class="result-option-icon">
+                                {% if option == answer.question.correct_answer %}✓
+                                {% elif option == answer.selected_answer %}✗
+                                {% else %}•
+                                {% endif %}
+                            </span>
+                            {{ option }}
+                            {% if option == answer.question.correct_answer and option == answer.selected_answer %}
+                            <span style="margin-left: auto;">✔</span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% empty %}
+                <li>No questions answered.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="result-actions">
+            <a href="{% url 'start_quiz' attempt.quiz.id %}" class="btn btn-outline">Retake Quiz</a>
+            <a href="{% url 'dashboard' %}" class="btn">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

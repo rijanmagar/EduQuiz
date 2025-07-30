@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}SmartEduQuiz - {{ quiz.title }}{% endblock %}
+{% block extra_css %}
+<style>
+    .quiz-container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 10px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1); }
+    .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .question-text { font-size: 1.2rem; font-weight: 500; margin-bottom: 1.5rem; }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option { padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; transition: all 0.3s; }
+    .option:hover { background-color: #f8f9fa; }
+    .option input { margin-right: 0.5rem; }
+    .progress-bar { width: 100%; height: 10px; background: #ddd; border-radius: 5px; margin: 1rem 0; }
+    .progress-bar-fill { height: 100%; background: var(--primary); border-radius: 5px; width: {{ progress }}%; }
+    .navigation { display: flex; justify-content: space-between; margin-top: 1rem; }
+    .bookmark-btn { cursor: pointer; color: {{ current_question.id|slugify in bookmarked_questions|yesno:"#ffc107,#888" }}; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="quiz-container">
+    <div class="question-header">
+        <h2>{{ quiz.title }}</h2>
+        <span>Question {{ current_question_index|add:1 }} of {{ questions|length }}</span>
+    </div>
+    <div class="progress-bar">
+        <div class="progress-bar-fill"></div>
+    </div>
+    <div class="question-text">{{ current_question.text }}</div>
+    <form method="post">
+        {% csrf_token %}
+        <div class="options">
+            <label class="option">
+                <input type="radio" name="answer" value="{{ current_question.option1 }}" {% if user_answer == current_question.option1 %}checked{% endif %}> {{ current_question.option1 }}
+            </label>
+            <label class="option">
+                <input type="radio" name="answer" value="{{ current_question.option2 }}" {% if user_answer == current_question.option2 %}checked{% endif %}> {{ current_question.option2 }}
+            </label>
+            <label class="option">
+                <input type="radio" name="answer" value="{{ current_question.option3 }}" {% if user_answer == current_question.option3 %}checked{% endif %}> {{ current_question.option3 }}
+            </label>
+            <label class="option">
+                <input type="radio" name="answer" value="{{ current_question.option4 }}" {% if user_answer == current_question.option4 %}checked{% endif %}> {{ current_question.option4 }}
+            </label>
+        </div>
+        <div class="navigation">
+            <button type="submit" name="action" value="previous" {% if current_question_index == 0 %}disabled{% endif %} class="btn btn-outline">Previous</button>
+            <span class="bookmark-btn" onclick="bookmarkQuestion('{{ current_question.id }}')">★</span>
+            <button type="submit" name="action" value="next" class="btn btn-primary">{{ current_question_index|add:1 == questions|length|yesno:"Submit,Next" }}</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    function bookmarkQuestion(questionId) {
+        fetch('{% url 'bookmark_question' %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ question_id: questionId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const btn = document.querySelector('.bookmark-btn');
+                btn.style.color = btn.style.color === 'rgb(255, 193, 7)' ? '#888' : '#ffc107';
+            }
+        });
+    }
+</script>
+{% endblock %}

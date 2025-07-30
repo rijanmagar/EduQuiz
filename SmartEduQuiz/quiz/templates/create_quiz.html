@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}SmartEduQuiz - Create Quiz{% endblock %}
+{% block extra_css %}
+<style>
+    .create-quiz-container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 10px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1); }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-weight: 500; margin-bottom: 0.5rem; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px; }
+    .form-group textarea { height: 200px; }
+    .error-message { color: #dc3545; font-size: 0.9rem; margin-top: 0.5rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="create-quiz-container">
+    <h2>Create a New Quiz</h2>
+    {% if messages %}
+    <div>
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <form method="post" action="{% url 'create_quiz' %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="title">Quiz Title</label>
+            <input type="text" id="title" name="title" required>
+        </div>
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category" required>
+                <option value="" disabled selected>Select a category</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="questions">Questions (Format: Question|Option1|Option2|Option3|Option4|Correct Answer)</label>
+            <textarea id="questions" name="questions" rows="10" placeholder="Example: What is 2+2?|2|4|6|8|4" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Quiz</button>
+    </form>
+</div>
+{% endblock %}
